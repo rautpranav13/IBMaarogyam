@@ -5,7 +5,7 @@ import base64
 from ibm_watsonx_ai import Credentials
 from ibm_watsonx_ai.foundation_models import ModelInference
 
-app = FlaskLambda(__name__)
+app = Flask(__name__)
 
 def augment_api_request_body(user_query, images):
     """
