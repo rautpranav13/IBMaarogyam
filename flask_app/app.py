@@ -1,4 +1,4 @@
-from flask_lambda import FlaskLambda
+#from flask_lambda import FlaskLambda
 from flask import Flask, request, jsonify
 import requests
 import base64
