@@ -39,7 +39,10 @@ def process_images_and_query(image_urls):
     encoded_images = []
     for url in image_urls:
         try:
-            encoded_images.append(base64.b64encode(requests.get(url).content).decode("utf-8"))
+            # Iterate through each image URL to fetch and encode it
+            response = requests.get(url)
+            response.raise_for_status()  # To handle any HTTP errors
+            encoded_images.append(base64.b64encode(response.content).decode("utf-8"))
         except Exception as e:
             return {"status": "error", "message": f"Failed to process image: {str(e)}"}
 
