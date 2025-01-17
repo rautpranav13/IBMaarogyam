@@ -1,4 +1,3 @@
-#from flask_lambda import FlaskLambda
 from flask import Flask, request, jsonify
 import requests
 import base64
@@ -7,19 +6,16 @@ from ibm_watsonx_ai.foundation_models import ModelInference
 
 app = Flask(__name__)
 
-def augment_api_request_body(user_query, images):
+def augment_api_request_body(user_query, image):
     """
     Prepares the message payload for the WatsonX API request.
     """
-    image_payload = []
-
-    for image in images:
-        image_payload.append({
-            "type": "image_url",
-            "image_url": {
-                "url": f"data:image/jpeg;base64,{image}",
-            }
-        })
+    image_payload = [{
+        "type": "image_url",
+        "image_url": {
+            "url": f"data:image/jpeg;base64,{image}",
+        }
+    }]
 
     messages = [
         {
@@ -32,19 +28,15 @@ def augment_api_request_body(user_query, images):
     ]
     return messages
 
-def process_images_and_query(image_urls):
+def process_image_and_query(image_url):
     """
-    Processes images and queries for insights and drug schedules.
+    Processes a single image URL for insights and drug schedules.
     """
-    encoded_images = []
-    for url in image_urls:
-        try:
-            # Iterate through each image URL to fetch and encode it
-            response = requests.get(url)
-            response.raise_for_status()  # To handle any HTTP errors
-            encoded_images.append(base64.b64encode(response.content).decode("utf-8"))
-        except Exception as e:
-            return {"status": "error", "message": f"Failed to process image: {str(e)}"}
+    try:
+        # Encode the image to base64
+        encoded_image = base64.b64encode(requests.get(image_url).content).decode("utf-8")
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to process image: {str(e)}"}
 
     credentials = Credentials(
         url="https://eu-gb.ml.cloud.ibm.com",
@@ -55,48 +47,47 @@ def process_images_and_query(image_urls):
         model_id="mistralai/pixtral-12b",
         credentials=credentials,
         project_id="09c41291-0ace-4742-8066-b5b2df2d2db0",
-        params={"max_tokens": 300}
+        params={"max_tokens": 1000}
     )
 
-    responses = []
-    for i, encoded_image in enumerate(encoded_images):
-        try:
-            insights_query = "Provide insights for the given image."
-            insights_messages = augment_api_request_body(insights_query, [encoded_image])
-            insights_response = model.chat(messages=insights_messages)
-            insights_content = insights_response['choices'][0]['message']['content']
+    try:
+        # Insights query
+        insights_query = "Provide insights for the given image."
+        insights_messages = augment_api_request_body(insights_query, encoded_image)
+        insights_response = model.chat(messages=insights_messages)
+        insights_content = insights_response['choices'][0]['message']['content']
 
-            schedule_query = "Extract drug schedules from the image."
-            schedule_messages = augment_api_request_body(schedule_query, [encoded_image])
-            schedule_response = model.chat(messages=schedule_messages)
-            schedule_content = schedule_response['choices'][0]['message']['content']
+        # Drug schedule query
+        schedule_query = "Extract drug schedules from the image."
+        schedule_messages = augment_api_request_body(schedule_query, encoded_image)
+        schedule_response = model.chat(messages=schedule_messages)
+        schedule_content = schedule_response['choices'][0]['message']['content']
 
-            responses.append({
-                "image_index": i + 1,
-                "insights": insights_content,
-                "drug_schedule": schedule_content
-            })
-        except Exception as e:
-            responses.append({"image_index": i + 1, "error": str(e)})
+        return {
+            "status": "success",
+            "insights": insights_content,
+            "drug_schedule": schedule_content
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
-    return {"status": "success", "responses": responses}
-
-@app.route('/process-images', methods=['POST'])
-def process_images():
+@app.route('/process-image', methods=['POST'])
+def process_image():
     """
-    API endpoint to process images.
-    Now expects a list of image URLs as input.
+    API endpoint to process a single image.
     """
     try:
+        # Get the input data
         data = request.get_json()
+        
+        # Check if the image_url key is present and it's a string
+        image_url = data.get('image_url')
+        
+        if not image_url or not isinstance(image_url, str):
+            return jsonify({"status": "error", "message": "Invalid input, expected a single image URL as a string."}), 400
 
-        # Assuming the input is a list of image URLs directly
-        if not isinstance(data, list):
-            return jsonify({"status": "error", "message": "Invalid input, expected a list of image URLs."}), 400
-
-        image_urls = data  # Directly use the list of image URLs
-
-        result = process_images_and_query(image_urls)
+        # Process the image and get the result
+        result = process_image_and_query(image_url)
         return jsonify(result)
 
     except Exception as e:
@@ -104,7 +95,7 @@ def process_images():
 
 @app.route('/')
 def home():
-    return "Welcome to the Flask app on Netlify!"
+    return "Welcome to the Flask app!"
 
 if __name__ == "__main__":
     app.run(debug=True)
