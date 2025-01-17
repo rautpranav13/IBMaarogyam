@@ -1,5 +1,0 @@
-[build]
-  functions = "functions"
-
-[functions."flask-server"]
-  included_files = ["flask_app/*", "requirements.txt"]
