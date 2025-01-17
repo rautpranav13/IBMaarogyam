@@ -1,0 +1,4 @@
+flask
+flask-lambda
+requests
+ibm-watsonx-ai
