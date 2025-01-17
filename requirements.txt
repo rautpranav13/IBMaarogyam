@@ -1,4 +1,0 @@
-flask
-flask-ngrok
-requests
-ibm-watsonx-ai
