@@ -45,14 +45,14 @@ def process_images_and_query(image_urls):
 
     credentials = Credentials(
         url="https://eu-gb.ml.cloud.ibm.com",
-        api_key="your_ibm_api_key"
+        api_key="b66IXKwtuNfVXgk2wEafqT4oak35nT5ggUySPgBg3-Kl"
     )
 
     model = ModelInference(
         model_id="mistralai/pixtral-12b",
         credentials=credentials,
-        project_id="your_project_id",
-        params={"max_tokens": 1000}
+        project_id="09c41291-0ace-4742-8066-b5b2df2d2db0",
+        params={"max_tokens": 300}
     )
 
     responses = []
@@ -82,13 +82,16 @@ def process_images_and_query(image_urls):
 def process_images():
     """
     API endpoint to process images.
+    Now expects a list of image URLs as input.
     """
     try:
         data = request.get_json()
-        image_urls = data.get('image_urls', [])
 
-        if not image_urls or not isinstance(image_urls, list):
-            return jsonify({"status": "error", "message": "Invalid 'image_urls'."}), 400
+        # Assuming the input is a list of image URLs directly
+        if not isinstance(data, list):
+            return jsonify({"status": "error", "message": "Invalid input, expected a list of image URLs."}), 400
+
+        image_urls = data  # Directly use the list of image URLs
 
         result = process_images_and_query(image_urls)
         return jsonify(result)
