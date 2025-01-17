@@ -40,14 +40,14 @@ def process_image_and_query(image_url):
 
     credentials = Credentials(
         url="https://eu-gb.ml.cloud.ibm.com",
-        api_key="b66IXKwtuNfVXgk2wEafqT4oak35nT5ggUySPgBg3-Kl"
+        api_key="6P3ojg1AqGOCjwq-w1XVYxNuup_9Dmqqed9zYH8uTo-r"
     )
 
     model = ModelInference(
         model_id="mistralai/pixtral-12b",
         credentials=credentials,
-        project_id="09c41291-0ace-4742-8066-b5b2df2d2db0",
-        params={"max_tokens": 1000}
+        project_id="209d09a2-9ebd-4635-826b-250210a27c4e",
+        params={"max_tokens": 200}
     )
 
     try:
