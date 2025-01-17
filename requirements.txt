@@ -1,4 +1,5 @@
-flask
-flask-lambda
-requests
-ibm-watsonx-ai
+flask==2.2.5
+flask-lambda==0.1.1
+requests==2.31.0
+ibm-watsonx-ai==0.1.2
+numpy==1.23.5
