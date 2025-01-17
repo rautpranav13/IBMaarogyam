@@ -1,8 +1,9 @@
 [build]
+  python_version = "3.8"
   command = "apt-get update && apt-get install -y python3-dev build-essential && python3 -m pip install -r requirements.txt && python3 app.py"
   publish = "build"
 
 [functions]
   [functions.python]
-    version = "3.11"
+    version = "3.8"
     external_node_modules = []
