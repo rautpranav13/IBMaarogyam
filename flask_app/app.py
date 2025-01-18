@@ -42,9 +42,9 @@ def validate_html(html_content):
         return "<body><h3>Error</h3><p>Invalid HTML content generated.</p></body>"
     return html_content
 
-def process_image_and_query(image_url):
+def process_image_with_query(image_url, user_query):
     """
-    Processes a single image URL for insights and drug schedules.
+    Processes an image with a custom user query and returns the response.
     """
     try:
         # Encode the image to base64
@@ -55,7 +55,7 @@ def process_image_and_query(image_url):
     # WatsonX AI credentials and model initialization
     credentials = Credentials(
         url="https://eu-gb.ml.cloud.ibm.com",
-        api_key="6P3ojg1AqGOCjwq-w1XVYxNuup_9Dmqqed9zYH8uTo-r"  
+        api_key="6P3ojg1AqGOCjwq-w1XVYxNuup_9Dmqqed9zYH8uTo-r"
     )
 
     model = ModelInference(
@@ -66,22 +66,15 @@ def process_image_and_query(image_url):
     )
 
     try:
-        # Define queries and responses
-        queries = {
-            "insights": "Extract and summarize the key details present in the image with significant observations.",
-            "drug_schedule": "Extract the list of prescribed medicines along with their dosage, frequency, and any specific instructions."
-        }
+        # Prepare the request payload
+        messages = augment_api_request_body(user_query, encoded_image)
 
-        responses = {}
+        # Call WatsonX AI with the custom query
+        response = model.chat(messages=messages)
+        content = response.get('choices', [{}])[0].get('message', {}).get('content', '').strip()
 
-        # Process each query
-        for key, query in queries.items():
-            messages = augment_api_request_body(query, encoded_image)
-            response = model.chat(messages=messages)
-            content = response.get('choices', [{}])[0].get('message', {}).get('content', '').strip()
-            responses[key] = validate_html(content)
-
-        return responses
+        # Validate and return the response
+        return {"status": "success", "response": validate_html(content)}
 
     except Exception as e:
         return {"status": "error", "message": str(e)}
@@ -89,18 +82,23 @@ def process_image_and_query(image_url):
 @app.route('/process-image', methods=['POST'])
 def process_image():
     """
-    API endpoint to process a single image.
+    API endpoint to process an image with a custom user query.
     """
     try:
-        # Get the input data
+        # Parse the JSON body
         data = request.get_json()
         image_url = data.get('image_url')
+        user_query = data.get('user_query')
 
+        # Validate input
         if not image_url or not isinstance(image_url, str):
-            return jsonify({"status": "error", "message": "Invalid input, expected a single image URL as a string."}), 400
+            return jsonify({"status": "error", "message": "Invalid input: 'image_url' is required and must be a string."}), 400
 
-        # Process the image and get the result
-        result = process_image_and_query(image_url)
+        if not user_query or not isinstance(user_query, str):
+            return jsonify({"status": "error", "message": "Invalid input: 'user_query' is required and must be a string."}), 400
+
+        # Process the image and query
+        result = process_image_with_query(image_url, user_query)
         return jsonify(result)
 
     except Exception as e:
