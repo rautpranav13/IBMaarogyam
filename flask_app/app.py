@@ -21,7 +21,8 @@ def augment_api_request_body(user_query, image):
         {
             "role": "user",
             "content": [
-                {"type": "text", "text": f"You are a helpful assistant. Answer briefly: {user_query}"},
+                {"type": "text", 
+                "text": f"You are a highly advanced AI assistant designed to process and analyze medical images. Bullet points with little descriptions are prefered. Use the following format in your response: \h for headings. \p for each new point. \\n for a new line. \\b to make text bold. \y to highlight text. {user_query}"},
                 *image_payload
             ]
         }
@@ -52,13 +53,13 @@ def process_image_and_query(image_url):
 
     try:
         # Insights query
-        insights_query = "Provide insights for the given image."
+        insights_query = "Extract and summarize the key details present in the image with significant observations."
         insights_messages = augment_api_request_body(insights_query, encoded_image)
         insights_response = model.chat(messages=insights_messages)
         insights_content = insights_response['choices'][0]['message']['content']
 
         # Drug schedule query
-        schedule_query = "Extract drug schedules from the image."
+        schedule_query = "Extract the list of prescribed medicines along with their dosage, frequency, and any specific instructions."
         schedule_messages = augment_api_request_body(schedule_query, encoded_image)
         schedule_response = model.chat(messages=schedule_messages)
         schedule_content = schedule_response['choices'][0]['message']['content']
