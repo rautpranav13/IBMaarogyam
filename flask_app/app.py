@@ -1,3 +1,4 @@
+#API service
 from flask import Flask, request, jsonify
 import requests
 import base64
@@ -10,24 +11,36 @@ def augment_api_request_body(user_query, image):
     """
     Prepares the message payload for the WatsonX API request.
     """
-    image_payload = [{
-        "type": "image_url",
-        "image_url": {
-            "url": f"data:image/jpeg;base64,{image}",
-        }
-    }]
-
-    messages = [
+    return [
         {
             "role": "user",
             "content": [
-                {"type": "text", 
-                "text": f"You are a highly advanced AI assistant designed to process and analyze medical images. Bullet points with little descriptions are prefered. Use the following format in your response: \h for headings. \p for each new point. \\n for a new line. \\b to make text bold. \y to highlight text. {user_query}"},
-                *image_payload
+                {
+                    "type": "text",
+                    "text": (
+                        "You are a highly advanced AI assistant designed to process and analyze medical images. "
+                        "Bullet points with short descriptions are preferred. Return the response as minimal "
+                        "HTML <body> content, structured with headings, bullet points, and bolded critical information. "
+                        "Ensure the output is plain text, concise, and suitable for mobile app display. "
+                        f"{user_query}"
+                    )
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{image}"}
+                }
             ]
         }
     ]
-    return messages
+
+def validate_html(html_content):
+    """
+    Validates if the HTML content starts with <body> and ends with </body>.
+    If invalid, returns fallback HTML content.
+    """
+    if not html_content.startswith("<body>") or not html_content.endswith("</body>"):
+        return "<body><h3>Error</h3><p>Invalid HTML content generated.</p></body>"
+    return html_content
 
 def process_image_and_query(image_url):
     """
@@ -39,9 +52,10 @@ def process_image_and_query(image_url):
     except Exception as e:
         return {"status": "error", "message": f"Failed to process image: {str(e)}"}
 
+    # WatsonX AI credentials and model initialization
     credentials = Credentials(
         url="https://eu-gb.ml.cloud.ibm.com",
-        api_key="6P3ojg1AqGOCjwq-w1XVYxNuup_9Dmqqed9zYH8uTo-r"
+        api_key="6P3ojg1AqGOCjwq-w1XVYxNuup_9Dmqqed9zYH8uTo-r"  
     )
 
     model = ModelInference(
@@ -52,23 +66,23 @@ def process_image_and_query(image_url):
     )
 
     try:
-        # Insights query
-        insights_query = "Extract and summarize the key details present in the image with significant observations."
-        insights_messages = augment_api_request_body(insights_query, encoded_image)
-        insights_response = model.chat(messages=insights_messages)
-        insights_content = insights_response['choices'][0]['message']['content']
-
-        # Drug schedule query
-        schedule_query = "Extract the list of prescribed medicines along with their dosage, frequency, and any specific instructions."
-        schedule_messages = augment_api_request_body(schedule_query, encoded_image)
-        schedule_response = model.chat(messages=schedule_messages)
-        schedule_content = schedule_response['choices'][0]['message']['content']
-
-        return {
-            "status": "success",
-            "insights": insights_content,
-            "drug_schedule": schedule_content
+        # Define queries and responses
+        queries = {
+            "insights": "Extract and summarize the key details present in the image with significant observations.",
+            "drug_schedule": "Extract the list of prescribed medicines along with their dosage, frequency, and any specific instructions."
         }
+
+        responses = {}
+
+        # Process each query
+        for key, query in queries.items():
+            messages = augment_api_request_body(query, encoded_image)
+            response = model.chat(messages=messages)
+            content = response.get('choices', [{}])[0].get('message', {}).get('content', '').strip()
+            responses[key] = validate_html(content)
+
+        return responses
+
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
@@ -80,10 +94,8 @@ def process_image():
     try:
         # Get the input data
         data = request.get_json()
-        
-        # Check if the image_url key is present and it's a string
         image_url = data.get('image_url')
-        
+
         if not image_url or not isinstance(image_url, str):
             return jsonify({"status": "error", "message": "Invalid input, expected a single image URL as a string."}), 400
 
