@@ -38,8 +38,8 @@ def validate_html(html_content):
     Validates if the HTML content starts with <body> and ends with </body>.
     If invalid, returns fallback HTML content.
     """
-    if not html_content.startswith("<body>") or not html_content.endswith("</body>"):
-        return "<body><h3>Error</h3><p>Invalid HTML content generated.</p></body>"
+    #if not html_content.startswith("<body>") or not html_content.endswith("</body>"):
+        #return "<body><h3>Error</h3><p>Invalid HTML content generated.</p></body>"
     return html_content
 
 def process_image_with_query(image_url, user_query):
