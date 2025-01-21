@@ -62,7 +62,7 @@ def process_image_with_query(image_url, user_query):
         model_id="mistralai/pixtral-12b",
         credentials=credentials,
         project_id="209d09a2-9ebd-4635-826b-250210a27c4e",
-        params={"max_tokens": 200}
+        params={"max_tokens": 800}
     )
 
     try:
