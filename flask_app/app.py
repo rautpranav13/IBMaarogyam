@@ -55,11 +55,12 @@ def process_image_with_query(image_url, user_query):
     # WatsonX AI credentials and model initialization
     credentials = Credentials(
         url="https://us-south.ml.cloud.ibm.com",  ############  URL  #############
-        api_key="cHJSz7xdlazOCxxMb-kNHjkodzXHSX0kMgDscAt4eKSq" ###################  API KEY  (NOT CHANGED)############
+        api_key="cHJSz7xdlazOCxxMb-kNHjkodzXHSX0kMgDscAt4eKSq" ###################  API KEY  (account CHANGED)############
     )
 
     model = ModelInference(
-        model_id="mistralai/pixtral-12b",
+        #model_id="mistralai/pixtral-12b",
+        model_id="meta-llama/llama-3-2-11b-vision-instruct",      ####model changed####
         credentials=credentials,
         project_id="bdb6355d-f24b-4879-bd08-67e0af9bac2d", ############  Projectid  ###########################
         params={"max_tokens": 500}
