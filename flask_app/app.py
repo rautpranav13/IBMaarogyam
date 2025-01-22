@@ -55,7 +55,7 @@ def process_image_with_query(image_url, user_query):
     # WatsonX AI credentials and model initialization
     credentials = Credentials(
         url="https://us-south.ml.cloud.ibm.com",  ############  URL  #############
-        api_key="6P3ojg1AqGOCjwq-w1XVYxNuup_9Dmqqed9zYH8uTo-r" ###################  API KEY  (NOT CHANGED)############
+        api_key="cHJSz7xdlazOCxxMb-kNHjkodzXHSX0kMgDscAt4eKSq" ###################  API KEY  (NOT CHANGED)############
     )
 
     model = ModelInference(
